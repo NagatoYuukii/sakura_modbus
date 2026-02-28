@@ -1,0 +1,103 @@
+#ifndef __SKRMB_CMN_H
+#define __SKRMB_CMN_H
+
+#include "skrmb_def.h"
+
+/* 检查指针是否为NULL */
+#define SKRMB_PTR_NULL(ptr)               \
+    do {                                  \
+        if ((ptr) == NULL) {              \
+            skrmb_debug("[SKRMB_ASSET ERROR] NULL pointer: %s\r\n",#ptr);         \
+            while (1);                    \
+        }                                 \
+    } while (0)
+
+/* 無用處理 */
+#define SKRMB_NO_USE(data) (void)(data)
+
+/* 设备端口描述 */
+typedef struct _skrmb_dev_port_t
+{
+    uint8_t port_id;
+    void(* port_send_func)(uint8_t *d, uint16_t len);
+    uint32_t port_send_s_tick_ms;
+    struct _skrmb_dev_port_t *next_port_addr;
+}skrmb_dev_port_t;
+
+/* 设备寄存器结构体 */
+typedef struct _skrmb_dev_reg_t
+{
+    skrmb_reg_type_e reg_type;                          /* 寄存器類型 */
+    uint16_t start_addr;                                /* 寄存器起始地址*/
+    uint16_t reg_len;                                   /* 总长度/总位数（当为线圈时,代表的是总位数） */
+    void     *reg_data;                                 /* 寄存器数据 */
+}skrmb_dev_reg_t;
+
+/* 主机设备等待参数 */
+typedef struct _skrmb_mdev_wait_para_t
+{
+    bool                        waiting_flg;            /* 等待标志 */
+    uint8_t                     smb_addr;               /* 从机地址 */
+    uint8_t                     funcode;                /* 功能码 */
+    uint16_t                    reg_addr;               /* 寄存器地址 */
+    uint16_t                    reg_num;                /* 寄存器个数 */
+    uint32_t                    timeout_ms;             /* 等待超时时间(ms) */
+    uint32_t                    s_tick_ms;              /* 初始时间 */
+}skrmb_mdev_wait_para_t;
+
+/* 设备节点描述 */
+typedef struct _skrmb_dev_node_t
+{
+    skrmb_role_e                dev_role;                 /* 设备角色 */
+    struct _skrmb_dev_port_t    *first_port;              /* 第一个端口的地址 */
+    uint8_t                     mb_addr;                  /* Modbus地址 */
+    uint8_t                     broadcast_addr;           /* 广播地址 */
+    uint8_t                     *rec_buf;                 /* 接收缓存 */
+    uint16_t                    rec_len;                  /* 接收长度 */
+    skrmb_data_type_e           rec_flg;                  /* 接受标志 */
+    uint8_t                     send_port_id;             /* 需要發送到的端口id */ 
+    uint8_t                     *send_buf;                /* 发送缓存 */
+    struct _skrmb_dev_reg_t     *reg_table;               /* 寄存器表 */
+    uint16_t                    reg_count;                /* 设备寄存器个数 */
+    struct _skrmb_mdev_wait_para_t *m_wait_para;          /* 主机设备等待参数*/
+}skrmb_dev_node_t;
+
+/* 设备链表描述 */
+typedef struct _skrmb_dev_addr_node_t
+{
+    uint32_t                        dev_id;             /* 设备ID */
+    skrmb_dev_node_t                *dev_addr;          /* 节点地址 */
+    struct _skrmb_dev_addr_node_t   *next_dev_addr;     /* 下一设备地址 */
+}skrmb_dev_addr_node_t;
+
+extern bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms);
+
+extern uint16_t skrmb_err_response(struct _skrmb_dev_node_t *dev_node, uint8_t funcode, skrmb_err_resp_e err_type);
+
+extern skrmb_sta_flg_e skrmb_m_request_read(struct _skrmb_dev_node_t *dev_node);
+
+extern skrmb_sta_flg_e skrmb_m_request_write(struct _skrmb_dev_node_t *dev_node, void *w_data, uint16_t w_len);
+
+extern struct _skrmb_dev_node_t *skrmb_find_dev(uint32_t dev_id);
+
+extern struct _skrmb_dev_port_t *skrmb_find_port(struct _skrmb_dev_node_t *dev_node, uint8_t port_id);
+
+extern skrmb_sta_flg_e skrmb_send_data(struct _skrmb_dev_node_t *dev_node, uint8_t *data, uint16_t len);
+
+extern skrmb_sta_flg_e skrmb_dev_slave_create(uint32_t dev_id, uint8_t modbus_addr, uint8_t broadcast_addr, struct _skrmb_dev_reg_t *reg_table, uint16_t reg_count);
+
+extern skrmb_sta_flg_e skrmb_dev_master_create(uint32_t dev_id);
+
+extern skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* send_func)(uint8_t *d, uint16_t len));
+
+
+
+
+
+
+
+
+
+
+
+#endif  /* __SKRMB_CMN_H */
