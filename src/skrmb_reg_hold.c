@@ -3,7 +3,7 @@
 
 uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_type_e reg_type, uint16_t reg_count, uint16_t addr, uint8_t *buf, uint16_t len, bool is_read)
 {
-    uint8_t byte_count = 0;        // 已填充的buf字节索引
+    uint8_t byte_count = 0;
     uint16_t *data_p = NULL;
     uint32_t i = 0;
 
@@ -18,7 +18,7 @@ uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_typ
         bool single_byte = false;
         uint16_t reg_len = reg_table[i].reg_len;
         uint16_t reg_start = reg_table[i].start_addr;
-        /* 寄存器长度传入的是 uint8_t 的长度，而标准modbus是uint16_t */
+        /* The length passed to the register is the length of uint8_t, while the standard Modbus is uint16_t. */
         if (reg_len % 2 != 0) {
             reg_len++;
             single_byte = true;
@@ -31,7 +31,7 @@ uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_typ
 
         uint16_t copy_count = (reg_end - addr + 1) * 2;
         if (reg_end - addr >= len) {
-            // 超出了范围了
+            // check len overflow
             copy_count = len * 2;
             single_byte = false;
         }
@@ -88,7 +88,10 @@ skrmb_sta_flg_e skrmb_hold_write_single_handle(struct _skrmb_dev_node_t *dev_nod
     dev_node->send_buf[s_data_index++] = dev_node->rec_buf[4];
     dev_node->send_buf[s_data_index++] = dev_node->rec_buf[5];
 
-    /* note: skrmb_hold_data_handle 可能会将数据反转所以这条指令需要在 dev_node->send_buf[s_data_index++] = dev_node->rec_buf[4]; 后面  */
+    /* 
+    * note: skrmb_hold_data_handle() maybe reverse data byte;
+    * so skrmb_hold_data_handle() must after dev_node->send_buf[s_data_index++] = dev_node->rec_buf[4]; 
+    */
     skrmb_hold_data_handle(dev_node->reg_table, SKRMB_REG_TYPE_HOLDING, dev_node->reg_count, data_addr, (uint8_t *)&dev_node->rec_buf[4], 1, false);
 
     tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);

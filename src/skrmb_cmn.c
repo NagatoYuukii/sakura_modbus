@@ -183,12 +183,12 @@ skrmb_sta_flg_e skrmb_send_data(struct _skrmb_dev_node_t *dev_node, uint8_t *dat
     struct _skrmb_dev_port_t *send_port = NULL;
 
 #if (!SKRMB_CONFIG_BROADCAST_RESP)
-    // 广播数据不回复
+    // no response when recv broadcast data 
     if (dev_node->rec_flg == SKRMB_DATA_BROADCAST && dev_node->dev_role == SKRMB_ROLE_SLAVE) return SKRMB_NO_ERROR;
 #endif
     send_port = skrmb_find_port(dev_node, dev_node->send_port_id);
     SKRMB_PTR_NULL(send_port);
-    // 一般为3.5个字符
+    // wait generally 3.5 characters time
     while (!skrmb_tickcheck_ms(send_port->port_send_s_tick_ms, SKRMB_DEFAULT_SEND_GAP_MS)) skrmb_delay_ms(10);
     send_port->port_send_func(data, len);
     send_port->port_send_s_tick_ms = skrmb_get_curr_tick_ms();

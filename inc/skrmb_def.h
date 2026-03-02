@@ -10,80 +10,80 @@
 #define SKRMB_DEFAULT_BROADCAST_ADDR                    (0xFF)
 #define SKRMB_DEFAULT_DATA_MIN_LEN                      (4)
 #define SKRMB_DEFAULT_DATA_MAX_LEN                      (256)
-#define SKRMB_DEFAULT_SEND_GAP_MS                       (0)             // 发送数据间隔
+#define SKRMB_DEFAULT_SEND_GAP_MS                       (0)             // send data gap
 
-/* 高低位取值 */
+/* low/high bit get value */
 #define SKRMB_U16_GET(h,l)                             ((h << 8) | l)
 
-/* 协议栈支持的功能码 */
-#define SKRMB_FUNCODE_READ_COILS                    (0x01U) // 读线圈寄存器（01H）
-#define SKRMB_FUNCODE_READ_DISCRETE_INPUTS          (0x02U) // 读离散输入寄存器（02H）
-#define SKRMB_FUNCODE_READ_HOLDING_REGS             (0x03U) // 读保持寄存器（03H）
-#define SKRMB_FUNCODE_READ_INPUT_REGS               (0x04U) // 读输入寄存器（04H）
-#define SKRMB_FUNCODE_WRITE_SINGLE_COIL             (0x05U) // 写单个线圈寄存器（05H）
-#define SKRMB_FUNCODE_WRITE_SINGLE_HOLDING_REG      (0x06U) // 写单个保持寄存器（06H）
-#define SKRMB_FUNCODE_WRITE_MULTIPLE_COILS          (0x0FU) // 写多个线圈寄存器（0FH/15）
-#define SKRMB_FUNCODE_WRITE_MULTIPLE_HOLDING_REGS   (0x10U) // 写多个保持寄存器（10H/16）
+/* stack support function code */
+#define SKRMB_FUNCODE_READ_COILS                    (0x01U) // read coil register（01H）
+#define SKRMB_FUNCODE_READ_DISCRETE_INPUTS          (0x02U) // read discrete input register（02H）
+#define SKRMB_FUNCODE_READ_HOLDING_REGS             (0x03U) // read hold register（03H）
+#define SKRMB_FUNCODE_READ_INPUT_REGS               (0x04U) // read input register（04H）
+#define SKRMB_FUNCODE_WRITE_SINGLE_COIL             (0x05U) // write single coil register（05H）
+#define SKRMB_FUNCODE_WRITE_SINGLE_HOLDING_REG      (0x06U) // write single hold register（06H）
+#define SKRMB_FUNCODE_WRITE_MULTIPLE_COILS          (0x0FU) // write multiple coil register（0FH/15）
+#define SKRMB_FUNCODE_WRITE_MULTIPLE_HOLDING_REGS   (0x10U) // write multiple hold register（10H/16）
 
-/* 功能码异常响应标识（标准：原功能码+0x80）*/
+/* function err flag（standard: original function code + 0x80）*/
 #define SKRMB_FUNCODE_EXCEPTION_MASK                (0x80U)
 #define SKRMB_FUNCODE_IS_EXCEPTION(func_code) ((func_code) & SKRMB_FUNCODE_EXCEPTION_MASK)
 
-/* 输出定义*/
+/* stack debug printf */
 #define skrmb_debug(format, ...)                     printf(format,  ## __VA_ARGS__)
 
-/* 协议栈状态返回描述 */
+/* stack sta return */
 enum
 {
-    SKRMB_NO_ERROR = 0,                                     // 无错误
-    SKRMB_DEV_NO_FIND,                                      // 未找到设备id
-    SKRMB_INPUT_DATA_ERR,                                   // 输入数据长度或crc异常
-    SKRMB_INPUT_DATA_FULL,                                  // 输入数据处理区满
-    SKRMB_INPUT_MODBUS_ADDR_ERR,                            // 输入modbus地址异常
-    SKRMB_INPUT_FUNC_CODE_ERR,                              // 无效功能码
-    SKRMB_REG_INDEX_OVERFLOW,                               // 需要读取或写入的数据索引不存在
-    SKRMB_MASTER_WAIT_TIMEOUT,                              // 主机等待超时
+    SKRMB_NO_ERROR = 0,                                     // no error
+    SKRMB_DEV_NO_FIND,                                      // device id not found
+    SKRMB_INPUT_DATA_ERR,                                   // input data length or crc exception
+    SKRMB_INPUT_DATA_FULL,                                  // input data processing area full
+    SKRMB_INPUT_MODBUS_ADDR_ERR,                            // input modbus address exception
+    SKRMB_INPUT_FUNC_CODE_ERR,                              // invalid function code
+    SKRMB_REG_INDEX_OVERFLOW,                               // data index to read or write does not exist
+    SKRMB_MASTER_WAIT_TIMEOUT,                              // master wait timeout
 };
 typedef uint8_t skrmb_sta_flg_e;
 
-/* 设备角色 */
+/* stack dev role type */
 enum 
 {
-    SKRMB_ROLE_SLAVE = 0,   // 从机角色
-    SKRMB_ROLE_MASTER,      // 主机角色
+    SKRMB_ROLE_SLAVE = 0,   // slave
+    SKRMB_ROLE_MASTER,      // master
 };
 typedef uint8_t skrmb_role_e;
 
-/* 寄存器数据类型 */
+/* reg type */
 enum {
-    SKRMB_REG_TYPE_HOLDING = 0,          // Modbus保持寄存器（03/16功能码，可读可写，核心业务用）
-    SKRMB_REG_TYPE_INPUT,                // Modbus输入寄存器（04功能码，只读，如传感器采集数据）
-    SKRMB_REG_TYPE_COIL,                 // Modbus线圈寄存器（01/05功能码，布尔型，可读可写，如开关状态）
-    SKRMB_REG_TYPE_DISCRETE_INPUT,       // Modbus离散输入寄存器（02功能码，只读布尔，如故障触点）
+    SKRMB_REG_TYPE_HOLDING = 0,          // modbus holding register (function code 03/16, read/write, used for core business)
+    SKRMB_REG_TYPE_INPUT,                // modbus input register (function code 04, read only, e.g. sensor collected data)
+    SKRMB_REG_TYPE_COIL,                 // modbus coil register (function code 01/05, boolean type, read/write, e.g. switch status)
+    SKRMB_REG_TYPE_DISCRETE_INPUT,       // modbus discrete input register (function code 02, read only boolean, e.g. fault contact)
 };
 typedef uint8_t skrmb_reg_type_e;
 
-/* 数据异常描述*/
+/* data err description */
 enum 
 {
-    SKRMB_ERR_ILLEGAL_FUNC     = 0x01,  // 01：非法功能码（从站不支持主站请求的功能码）
-    SKRMB_ERR_ILLEGAL_DADDR    = 0x02,  // 02：非法数据地址（请求的寄存器/离散输入地址不存在/超出范围）
-    SKRMB_ERR_ILLEGAL_DAVALUE  = 0x03,  // 03：非法数据值
-    SKRMB_ERR_SLAVE_DEV_FAIL   = 0x04,  // 04：从站设备故障（从站内部故障，无法执行请求）
-    SKRMB_ERR_ACK              = 0x05,  // 05：确认（从站接收请求，需要延时处理，主站需等待）
-    SKRMB_ERR_SLAVE_DEV_BUSY   = 0x06,  // 06：从站设备忙（从站正在处理其他请求，暂时无法响应）
-    SKRMB_ERR_MEM_PARITY_ERR   = 0x08,  // 08：存储区奇偶性错误（从站存储区数据校验失败）
-    SKRMB_ERR_GATEWAY_PATH     = 0x0A,  // 10：网关路径不可用（网关无法找到目标从站路径）
-    SKRMB_ERR_GATEWAY_TARGET   = 0x0B,  // 11：网关目标设备无响应（网关找到路径，但目标从站未响应）
+    SKRMB_ERR_ILLEGAL_FUNC     = 0x01,  // 01: illegal function code (the slave does not support the function code requested by the master)
+    SKRMB_ERR_ILLEGAL_DADDR    = 0x02,  // 02: illegal data address (the requested register/discrete input address does not exist or is out of range)
+    SKRMB_ERR_ILLEGAL_DAVALUE  = 0x03,  // 03: illegal data value
+    SKRMB_ERR_SLAVE_DEV_FAIL   = 0x04,  // 04: slave device failure (internal failure of the slave, unable to execute the request)
+    SKRMB_ERR_ACK              = 0x05,  // 05: acknowledge (the slave receives the request and needs delayed processing, the master must wait)
+    SKRMB_ERR_SLAVE_DEV_BUSY   = 0x06,  // 06: slave device busy (the slave is processing other requests and cannot respond temporarily)
+    SKRMB_ERR_MEM_PARITY_ERR   = 0x08,  // 08: memory parity error (data verification of the slave memory area failed)
+    SKRMB_ERR_GATEWAY_PATH     = 0x0A,  // 10: gateway path unavailable (the gateway cannot find the path to the target slave)
+    SKRMB_ERR_GATEWAY_TARGET   = 0x0B,  // 11: gateway target device no response (the gateway finds the path, but the target slave does not respond)
 };
 typedef uint8_t skrmb_err_resp_e;
 
-/* 数据接收类型 */
+/* data type */
 enum
 {
-    SKRMB_NO_DATA = 0,                  // 无数据
-    SKRMB_DATA_NORMAL,                  // 正常数据
-    SKRMB_DATA_BROADCAST,               // 广播数据
+    SKRMB_NO_DATA = 0,                  // no data
+    SKRMB_DATA_NORMAL,                  // normal data
+    SKRMB_DATA_BROADCAST,               // broadcast data
 };
 typedef uint8_t skrmb_data_type_e;
 

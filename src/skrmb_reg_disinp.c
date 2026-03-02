@@ -21,11 +21,10 @@ skrmb_sta_flg_e skrmb_disinp_read_handle(struct _skrmb_dev_node_t *dev_node)
     dev_node->send_buf[s_data_index++] = byte_count;
     s_data_index += byte_count;
 
-    /* 目前为返回有效数据，不存在的数据不会返回，暂不返回错误码 */
+    /* Currently, only valid data will be returned; non-existent data will not be returned, and error codes are not returned for the time being. */
     // if (bit_count < data_len) 
     // {
     //     s_data_index = skrmb_err_response(dev_node, SKRMB_FUNCODE_READ_DISCRETE_INPUTS, SKRMB_ERR_ILLEGAL_DADDR);
-    //     // 数据长度溢出
     //     sta_flg = SKRMB_REG_INDEX_OVERFLOW;
     // }
 

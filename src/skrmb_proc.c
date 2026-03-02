@@ -19,7 +19,6 @@ void skrmb_rec_data_handle(uint32_t dev_id)
     /* no data */
     if (dev_node->rec_flg == SKRMB_NO_DATA) return; 
 
-    /* 主机从机分开处理 */
     if (dev_node->dev_role == SKRMB_ROLE_SLAVE) {
         skrmb_rec_data_handle_s(dev_node);
     } else {
@@ -34,7 +33,7 @@ static skrmb_sta_flg_e skrmb_rec_data_handle_s(struct _skrmb_dev_node_t *dev_nod
 {
     uint8_t tmp_mb_addr = 0, tmp_funcode = 0;
     uint32_t data_index = 0;
-    /* 不是自己的地址 */
+    /* check modbus addr */
     tmp_mb_addr = dev_node->rec_buf[data_index++];
 
     if (tmp_mb_addr == dev_node->broadcast_addr) {
@@ -112,10 +111,10 @@ static skrmb_sta_flg_e skrmb_rec_data_handle_m(struct _skrmb_dev_node_t *dev_nod
     uint8_t tmp_mb_addr = 0, tmp_funcode = 0;
     uint32_t data_index = 0;
 
-    /* 检查超时 */
+    /* check master wait timeout */
     skrmb_m_check_wait_timeout(dev_node);
 
-    /* 检查地址 */
+    /* check modbus addr */
     tmp_mb_addr = dev_node->rec_buf[data_index++];
 
     if (!dev_node->m_wait_para->waiting_flg || tmp_mb_addr != dev_node->m_wait_para->smb_addr) return SKRMB_INPUT_MODBUS_ADDR_ERR;
