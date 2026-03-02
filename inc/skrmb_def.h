@@ -10,7 +10,7 @@
 #define SKRMB_DEFAULT_BROADCAST_ADDR                    (0xFF)
 #define SKRMB_DEFAULT_DATA_MIN_LEN                      (4)
 #define SKRMB_DEFAULT_DATA_MAX_LEN                      (256)
-#define SKRMB_DEFAULT_SEND_GAP_MS                       (0)
+#define SKRMB_DEFAULT_SEND_GAP_MS                       (0)             // 发送数据间隔
 
 /* 高低位取值 */
 #define SKRMB_U16_GET(h,l)                             ((h << 8) | l)

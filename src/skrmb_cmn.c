@@ -271,6 +271,24 @@ skrmb_sta_flg_e skrmb_m_request_write(struct _skrmb_dev_node_t *dev_node, void *
     return SKRMB_NO_ERROR;
 }
 
+skrmb_sta_flg_e skrmb_reverse_two_bytes(uint8_t *data, uint16_t data_len)
+{
+#if SKRMB_CONFIG_REVERSE_DA_BYTE
+    uint8_t temp = 0;
+    uint16_t i = 0;
+    SKRMB_PTR_NULL(data);
 
+    if ((data_len % 2) != 0) {
+        data_len --;
+    }
+    for (i = 0; i < data_len; i += 2) 
+    {
+        temp = data[i];
+        data[i] = data[i + 1];
+        data[i + 1] = temp;
+    }
+#endif
+    return SKRMB_NO_ERROR;
+}
 
 

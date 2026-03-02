@@ -2,6 +2,7 @@
 #define __SKRMB_CMN_H
 
 #include "skrmb_def.h"
+#include "skrmb_cfg.h"
 
 /* 检查指针是否为NULL */
 #define SKRMB_PTR_NULL(ptr)               \
@@ -71,6 +72,8 @@ typedef struct _skrmb_dev_addr_node_t
 }skrmb_dev_addr_node_t;
 
 extern bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms);
+
+extern skrmb_sta_flg_e skrmb_reverse_two_bytes(uint8_t *data, uint16_t data_len);
 
 extern uint16_t skrmb_err_response(struct _skrmb_dev_node_t *dev_node, uint8_t funcode, skrmb_err_resp_e err_type);
 

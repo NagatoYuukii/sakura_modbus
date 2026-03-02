@@ -3,9 +3,9 @@
 
 uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_type_e reg_type, uint16_t reg_count, uint16_t addr, uint8_t *buf, uint16_t len, bool is_read)
 {
-    uint32_t i = 0;
     uint8_t byte_count = 0;        // 已填充的buf字节索引
     uint16_t *data_p = NULL;
+    uint32_t i = 0;
 
     for (i = 0; i < reg_count; i++)
     {
@@ -14,12 +14,14 @@ uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_typ
         }
 
         data_p = (uint16_t *)reg_table[i].reg_data;
-    
+        
+        bool single_byte = false;
         uint16_t reg_len = reg_table[i].reg_len;
         uint16_t reg_start = reg_table[i].start_addr;
         /* 寄存器长度传入的是 uint8_t 的长度，而标准modbus是uint16_t */
         if (reg_len % 2 != 0) {
-            reg_len ++;
+            reg_len++;
+            single_byte = true;
         }
         uint16_t reg_end = reg_table[i].start_addr + (reg_len / 2) - 1;
 
@@ -31,12 +33,15 @@ uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_typ
         if (reg_end - addr >= len) {
             // 超出了范围了
             copy_count = len * 2;
+            single_byte = false;
         }
 
         if (is_read) {
-            memcpy(&buf[byte_count], data_p, copy_count);
+            memcpy(&buf[byte_count], data_p, single_byte ? (copy_count - 1) : copy_count);
+            skrmb_reverse_two_bytes(&buf[byte_count], copy_count);
         } else {
-            memcpy(data_p, &buf[byte_count], copy_count);
+            skrmb_reverse_two_bytes(&buf[byte_count], copy_count);
+            memcpy(data_p, &buf[byte_count], single_byte ? (copy_count - 1) : copy_count);
         }
         byte_count += copy_count;
         addr += (copy_count / 2);
@@ -75,8 +80,6 @@ skrmb_sta_flg_e skrmb_hold_write_single_handle(struct _skrmb_dev_node_t *dev_nod
     uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
-    
-    skrmb_hold_data_handle(dev_node->reg_table, SKRMB_REG_TYPE_HOLDING, dev_node->reg_count, data_addr, (uint8_t *)&dev_node->rec_buf[4], 1, false);
 
     dev_node->send_buf[s_data_index++] = dev_node->mb_addr;
     dev_node->send_buf[s_data_index++] = SKRMB_FUNCODE_WRITE_SINGLE_HOLDING_REG;
@@ -84,6 +87,9 @@ skrmb_sta_flg_e skrmb_hold_write_single_handle(struct _skrmb_dev_node_t *dev_nod
     dev_node->send_buf[s_data_index++] = (uint8_t)data_addr;
     dev_node->send_buf[s_data_index++] = dev_node->rec_buf[4];
     dev_node->send_buf[s_data_index++] = dev_node->rec_buf[5];
+
+    /* note: skrmb_hold_data_handle 可能会将数据反转所以这条指令需要在 dev_node->send_buf[s_data_index++] = dev_node->rec_buf[4]; 后面  */
+    skrmb_hold_data_handle(dev_node->reg_table, SKRMB_REG_TYPE_HOLDING, dev_node->reg_count, data_addr, (uint8_t *)&dev_node->rec_buf[4], 1, false);
 
     tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
     dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;

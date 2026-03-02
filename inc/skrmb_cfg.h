@@ -12,7 +12,7 @@
 
 #define SKRMB_CONFIG_BROADCAST_RESP                             (1)         /* 广播回复 */
 
-
+#define SKRMB_CONFIG_REVERSE_DA_BYTE                            (1)         /* 是否反转数据字节 */
 
 
 
