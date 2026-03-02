@@ -17,6 +17,18 @@
 * 支持端口注册，可以一个设备多个端口，协议栈自动跟踪，从哪里来就从哪里出
 * 支持注册多个从机地址
 
+协议栈支持的功能码:
+```
+SKRMB_FUNCODE_READ_COILS                    (0x01U) // 读线圈寄存器（01H）
+SKRMB_FUNCODE_READ_DISCRETE_INPUTS          (0x02U) // 读离散输入寄存器（02H）
+SKRMB_FUNCODE_READ_HOLDING_REGS             (0x03U) // 读保持寄存器（03H）
+SKRMB_FUNCODE_READ_INPUT_REGS               (0x04U) // 读输入寄存器（04H）
+SKRMB_FUNCODE_WRITE_SINGLE_COIL             (0x05U) // 写单个线圈寄存器（05H）
+SKRMB_FUNCODE_WRITE_SINGLE_HOLDING_REG      (0x06U) // 写单个保持寄存器（06H）
+SKRMB_FUNCODE_WRITE_MULTIPLE_COILS          (0x0FU) // 写多个线圈寄存器（0FH/15）
+SKRMB_FUNCODE_WRITE_MULTIPLE_HOLDING_REGS   (0x10U) // 写多个保持寄存器（10H/16）
+```
+
 使用方法：  
 1. 把src的.c和inc的.h全部丢到工程中去。
 2. 如果需要使用从机设备，需要构建```struct _skrmb_dev_reg_t```数组，下一步的注册需要传入。
