@@ -15,6 +15,11 @@ bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms)
     return diff >= ms;
 }
 
+uint32_t skrmb_tick_diff_ms(uint32_t target_tick, uint32_t curr_tick)
+{
+    return (target_tick >= curr_tick) ? (target_tick - curr_tick) : (target_tick + (UINT32_MAX - curr_tick) + 1);
+}
+
 uint16_t skrmb_return_master_transaction_id(struct _skrmb_dev_node_t *dev_node)
 {
     uint16_t tmp_id = 0;
@@ -238,7 +243,9 @@ skrmb_sta_flg_e skrmb_send_data(struct _skrmb_dev_node_t *dev_node, uint8_t *dat
         len += sizeof(tcp_mbap);
     }
     // wait generally 3.5 characters time
-    while (!skrmb_tickcheck_ms(send_port->port_send_s_tick_ms, SKRMB_DEFAULT_SEND_GAP_MS)) skrmb_delay_ms(10);
+    while (!skrmb_tickcheck_ms(send_port->port_send_s_tick_ms, SKRMB_DEFAULT_SEND_GAP_MS)) {
+        skrmb_delay_ms(skrmb_tick_diff_ms(send_port->port_send_s_tick_ms + SKRMB_DEFAULT_SEND_GAP_MS, skrmb_get_curr_tick_ms()));
+    };
     send_port->port_send_func(data, len);
     send_port->port_send_s_tick_ms = skrmb_get_curr_tick_ms();
     

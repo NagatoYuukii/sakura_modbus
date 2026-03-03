@@ -76,6 +76,8 @@ typedef struct _skrmb_dev_addr_node_t
 
 extern bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms);
 
+extern uint32_t skrmb_tick_diff_ms(uint32_t target_tick, uint32_t curr_tick);
+
 extern uint16_t skrmb_return_master_transaction_id(struct _skrmb_dev_node_t *dev_node);
 
 extern skrmb_sta_flg_e skrmb_reverse_two_bytes(uint8_t *data, uint16_t data_len);
