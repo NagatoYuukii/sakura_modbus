@@ -6,7 +6,7 @@ skrmb_sta_flg_e skrmb_input_read_handle(struct _skrmb_dev_node_t *dev_node)
 {
     skrmb_sta_flg_e sta_flg = SKRMB_NO_ERROR;
     uint8_t byte_count = 0;
-    uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0, data_len = 0;
+    uint16_t s_data_index = 0, data_addr = 0, data_len = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
     data_len    = SKRMB_U16_GET(dev_node->rec_buf[4], dev_node->rec_buf[5]);
@@ -16,10 +16,6 @@ skrmb_sta_flg_e skrmb_input_read_handle(struct _skrmb_dev_node_t *dev_node)
     byte_count = skrmb_hold_data_handle(dev_node->reg_table, SKRMB_REG_TYPE_INPUT, dev_node->reg_count, data_addr, &dev_node->send_buf[s_data_index + 1], data_len, true);
     dev_node->send_buf[s_data_index++] = byte_count;
     s_data_index += byte_count;
-
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
 
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 

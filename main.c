@@ -63,8 +63,8 @@ int main( int argc, char *arg[] )
     }
     skrmb_dev_slave_create(1, 1, SKRMB_DEFAULT_BROADCAST_ADDR, modbus_slave_reg, sizeof(modbus_slave_reg)/sizeof(modbus_slave_reg[0]));
     skrmb_dev_master_create(2);
-    skrmb_dev_add_port(1, 0, skrmb_send_func_test);
-    skrmb_dev_add_port(2, 0, skrmb_send_func_test);
+    skrmb_dev_add_port(1, 0, skrmb_send_func_test, SKRMB_RTU_PORT);
+    skrmb_dev_add_port(2, 0, skrmb_send_func_test, SKRMB_TCP_PORT);
     // slave test
     skrmb_data_push(1, 0, read_coil_buf, sizeof(read_coil_buf));
     skrmb_dev_run(1);

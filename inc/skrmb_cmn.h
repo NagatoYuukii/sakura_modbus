@@ -19,9 +19,10 @@
 /* dev port description */
 typedef struct _skrmb_dev_port_t
 {
-    uint8_t port_id;
+    uint8_t                 port_id;
+    skrmb_port_type_e       port_type;
     void(* port_send_func)(uint8_t *d, uint16_t len);
-    uint32_t port_send_s_tick_ms;
+    uint32_t                port_send_s_tick_ms;
     struct _skrmb_dev_port_t *next_port_addr;
 }skrmb_dev_port_t;
 
@@ -38,6 +39,7 @@ typedef struct _skrmb_dev_reg_t
 typedef struct _skrmb_mdev_wait_para_t
 {
     bool                        waiting_flg;            /* wait response flag */
+    uint16_t                    transaction_id;         /* tcp master transaction id */
     uint8_t                     smb_addr;               /* wait slave modbus addr */
     uint8_t                     funcode;                /* wait function code */
     uint16_t                    reg_addr;               /* wait reg start addr */
@@ -55,6 +57,7 @@ typedef struct _skrmb_dev_node_t
     uint8_t                     broadcast_addr;           /* dev broadcast addr */
     uint8_t                     *rec_buf;                 /* recv buf addr */
     uint16_t                    rec_len;                  /* recv data len */
+    uint16_t                    rec_trans_id;             /* tcp mode trans id */
     skrmb_data_type_e           rec_flg;                  /* data recv type */
     uint8_t                     send_port_id;             /* data send port id */ 
     uint8_t                     *send_buf;                /* send buf addr */
@@ -72,6 +75,8 @@ typedef struct _skrmb_dev_addr_node_t
 }skrmb_dev_addr_node_t;
 
 extern bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms);
+
+extern uint16_t skrmb_return_master_transaction_id(struct _skrmb_dev_node_t *dev_node);
 
 extern skrmb_sta_flg_e skrmb_reverse_two_bytes(uint8_t *data, uint16_t data_len);
 
@@ -91,7 +96,7 @@ extern skrmb_sta_flg_e skrmb_dev_slave_create(uint32_t dev_id, uint8_t modbus_ad
 
 extern skrmb_sta_flg_e skrmb_dev_master_create(uint32_t dev_id);
 
-extern skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* send_func)(uint8_t *d, uint16_t len));
+extern skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* send_func)(uint8_t *d, uint16_t len), skrmb_port_type_e port_type);
 
 
 

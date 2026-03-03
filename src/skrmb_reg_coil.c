@@ -75,7 +75,7 @@ uint16_t skrmb_coil_search(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_type_e 
 skrmb_sta_flg_e skrmb_coil_read_handle(struct _skrmb_dev_node_t *dev_node)
 {
     uint8_t byte_count = 0;
-    uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0, data_len = 0, bit_count = 0;
+    uint16_t s_data_index = 0, data_addr = 0, data_len = 0, bit_count = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
     data_len    = SKRMB_U16_GET(dev_node->rec_buf[4], dev_node->rec_buf[5]);
@@ -88,10 +88,6 @@ skrmb_sta_flg_e skrmb_coil_read_handle(struct _skrmb_dev_node_t *dev_node)
     dev_node->send_buf[s_data_index++] = byte_count;
     s_data_index += byte_count;
 
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
-
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 
     return SKRMB_NO_ERROR;
@@ -99,7 +95,7 @@ skrmb_sta_flg_e skrmb_coil_read_handle(struct _skrmb_dev_node_t *dev_node)
 
 skrmb_sta_flg_e skrmb_coil_write_single_handle(struct _skrmb_dev_node_t *dev_node)
 {
-    uint16_t data_addr = 0;
+    uint16_t data_addr = 0, s_data_index = 0;
     bool on_off_flg = false;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
@@ -110,7 +106,14 @@ skrmb_sta_flg_e skrmb_coil_write_single_handle(struct _skrmb_dev_node_t *dev_nod
 
     skrmb_coil_search(dev_node->reg_table, SKRMB_REG_TYPE_COIL, dev_node->reg_count, data_addr, (uint8_t *)&on_off_flg, 1, false);
 
-    skrmb_send_data(dev_node, dev_node->rec_buf, dev_node->rec_len);    // 回复是相同的内容
+    dev_node->send_buf[s_data_index++] = dev_node->mb_addr;
+    dev_node->send_buf[s_data_index++] = SKRMB_FUNCODE_WRITE_SINGLE_COIL;
+    dev_node->send_buf[s_data_index++] = (uint8_t)(data_addr >> 8);
+    dev_node->send_buf[s_data_index++] = (uint8_t)(data_addr);
+    dev_node->send_buf[s_data_index++] = (uint8_t)(on_off_flg ? 0xFF : 0x00);
+    dev_node->send_buf[s_data_index++] = 0x00;
+
+    skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 
     return SKRMB_NO_ERROR;
 }
@@ -118,7 +121,7 @@ skrmb_sta_flg_e skrmb_coil_write_single_handle(struct _skrmb_dev_node_t *dev_nod
 skrmb_sta_flg_e skrmb_coil_write_multiple_handle(struct _skrmb_dev_node_t *dev_node)
 {
     uint8_t  w_byte_count = 0;
-    uint16_t data_addr = 0, w_bit_num = 0, s_data_index = 0, tmp_crc = 0;
+    uint16_t data_addr = 0, w_bit_num = 0, s_data_index = 0;
 
     SKRMB_NO_USE(w_byte_count);
 
@@ -134,10 +137,6 @@ skrmb_sta_flg_e skrmb_coil_write_multiple_handle(struct _skrmb_dev_node_t *dev_n
     w_bit_num = skrmb_coil_search(dev_node->reg_table, SKRMB_REG_TYPE_COIL, dev_node->reg_count, data_addr, (uint8_t *)&dev_node->rec_buf[7], w_bit_num, false);
     dev_node->send_buf[s_data_index++] = (uint8_t)(w_bit_num >> 8);
     dev_node->send_buf[s_data_index++] = (uint8_t)(w_bit_num);
-
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
 
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 

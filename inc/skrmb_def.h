@@ -15,6 +15,9 @@
 /* low/high bit get value */
 #define SKRMB_U16_GET(h,l)                             ((h << 8) | l)
 
+/* tcp mode def */
+#define SKRMB_DEFAULT_TCP_PROTOCOL_ID                   (0x0000)
+
 /* stack support function code */
 #define SKRMB_FUNCODE_READ_COILS                    (0x01U) // read coil register（01H）
 #define SKRMB_FUNCODE_READ_DISCRETE_INPUTS          (0x02U) // read discrete input register（02H）
@@ -31,6 +34,16 @@
 
 /* stack debug printf */
 #define skrmb_debug(format, ...)                     printf(format,  ## __VA_ARGS__)
+#define skrmb_debug_array(data, data_len)   \
+        do { \
+            skrmb_debug("["); \
+            for (uint32_t i = 0; i < data_len; i++) \
+            { \
+                if (i % 32 == 0 && i != 0) skrmb_debug("\r\n"); \
+                skrmb_debug("%02X", (data)[i]); \
+            } \
+            skrmb_debug("]\r\n"); \
+        } while (0)
 
 /* stack sta return */
 enum
@@ -87,7 +100,12 @@ enum
 };
 typedef uint8_t skrmb_data_type_e;
 
-
-
+/* port type */
+enum
+{
+    SKRMB_RTU_PORT = 0,
+    SKRMB_TCP_PORT,
+};
+typedef uint8_t skrmb_port_type_e;
 
 #endif  /* __SKRMB_DEF_H */

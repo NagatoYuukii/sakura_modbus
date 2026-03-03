@@ -15,6 +15,19 @@ bool skrmb_tickcheck_ms(uint32_t tick, uint32_t ms)
     return diff >= ms;
 }
 
+uint16_t skrmb_return_master_transaction_id(struct _skrmb_dev_node_t *dev_node)
+{
+    uint16_t tmp_id = 0;
+
+    SKRMB_PTR_NULL(dev_node);
+    SKRMB_PTR_NULL(dev_node->m_wait_para);
+
+    tmp_id = dev_node->m_wait_para->transaction_id;
+    dev_node->m_wait_para->transaction_id ++;
+
+    return tmp_id;
+}
+
 skrmb_sta_flg_e skrmb_dev_slave_create(uint32_t dev_id, uint8_t modbus_addr, uint8_t broadcast_addr, 
                                     struct _skrmb_dev_reg_t *reg_table, uint16_t reg_count)
 {
@@ -50,6 +63,7 @@ skrmb_sta_flg_e skrmb_dev_slave_create(uint32_t dev_id, uint8_t modbus_addr, uin
     dev_node->send_buf                      = skrmb_malloc(SKRMB_DEFAULT_DATA_MAX_LEN);
     dev_node->send_port_id                  = 0;
     dev_node->rec_len                       = 0;
+    dev_node->rec_trans_id                  = 0;
     dev_node->rec_flg                       = SKRMB_NO_DATA;
     dev_node->mb_addr                       = modbus_addr;
     dev_node->broadcast_addr                = broadcast_addr;
@@ -95,18 +109,20 @@ skrmb_sta_flg_e skrmb_dev_master_create(uint32_t dev_id)
     last_dev_addr_node->next_dev_addr = dev_addr_node;
 
     wait_para->waiting_flg                  = false;
+    wait_para->transaction_id               = 0;
     wait_para->smb_addr                     = 0;
     wait_para->funcode                      = 0;
     wait_para->reg_addr                     = 0;
     wait_para->reg_num                      = 0;
     wait_para->timeout_ms                   = 0;
 
-    dev_node->dev_role                      = SKRMB_ROLE_SLAVE;
+    dev_node->dev_role                      = SKRMB_ROLE_MASTER;
     dev_node->first_port                    = NULL;
     dev_node->rec_buf                       = skrmb_malloc(SKRMB_DEFAULT_DATA_MAX_LEN);
     dev_node->send_buf                      = skrmb_malloc(SKRMB_DEFAULT_DATA_MAX_LEN);
     dev_node->send_port_id                  = 0;
     dev_node->rec_len                       = 0;
+    dev_node->rec_trans_id                  = 0;
     dev_node->rec_flg                       = SKRMB_NO_DATA;
     dev_node->mb_addr                       = 0;
     dev_node->broadcast_addr                = 0;
@@ -140,7 +156,7 @@ struct _skrmb_dev_node_t *skrmb_find_dev(uint32_t dev_id)
     return dev_addr;
 }
 
-skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* send_func)(uint8_t *d, uint16_t len))
+skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* send_func)(uint8_t *d, uint16_t len), skrmb_port_type_e port_type)
 {
     struct _skrmb_dev_port_t *dev_port = skrmb_malloc(sizeof(skrmb_dev_port_t));
     struct _skrmb_dev_node_t *dev_addr = NULL;
@@ -169,6 +185,7 @@ skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* sen
     }
 
     dev_port->port_id           = port_id;
+    dev_port->port_type         = port_type;
     dev_port->port_send_func    = send_func;
     dev_port->port_send_s_tick_ms = 0;
     dev_port->next_port_addr    = NULL;
@@ -181,6 +198,7 @@ skrmb_sta_flg_e skrmb_dev_add_port(uint32_t dev_id, uint32_t port_id, void(* sen
 skrmb_sta_flg_e skrmb_send_data(struct _skrmb_dev_node_t *dev_node, uint8_t *data, uint16_t len)
 {
     struct _skrmb_dev_port_t *send_port = NULL;
+    uint16_t tmp_crc = 0;
 
 #if (!SKRMB_CONFIG_BROADCAST_RESP)
     // no response when recv broadcast data 
@@ -188,6 +206,37 @@ skrmb_sta_flg_e skrmb_send_data(struct _skrmb_dev_node_t *dev_node, uint8_t *dat
 #endif
     send_port = skrmb_find_port(dev_node, dev_node->send_port_id);
     SKRMB_PTR_NULL(send_port);
+    if (send_port->port_type == SKRMB_RTU_PORT)
+    {
+        /* RTU ADD CRC */
+        tmp_crc = skrmb_crc(data, len);
+        data[len++] = (uint8_t)tmp_crc;
+        data[len++] = (uint8_t)(tmp_crc >> 8);
+    }
+    else if (send_port->port_type == SKRMB_TCP_PORT)
+    {
+        /* TCP ADD MBAP (MBAP standard is 7 byte but data[0] is modbus addr = Unit ID, so tcp mbap[] only 6 byte) */
+        uint8_t tcp_mbap[6] = {0};
+        uint16_t transaction_id = 0;
+
+        if (dev_node->dev_role == SKRMB_ROLE_SLAVE) {
+            transaction_id = dev_node->rec_trans_id;
+        }
+        else if (dev_node->dev_role == SKRMB_ROLE_MASTER) {
+            transaction_id = skrmb_return_master_transaction_id(dev_node);
+        }
+    
+        tcp_mbap[0] = (uint8_t)(transaction_id >> 8);
+        tcp_mbap[1] = (uint8_t)(transaction_id);
+        tcp_mbap[2] = (uint8_t)(SKRMB_DEFAULT_TCP_PROTOCOL_ID >> 8);
+        tcp_mbap[3] = (uint8_t)(SKRMB_DEFAULT_TCP_PROTOCOL_ID);
+        tcp_mbap[4] = (uint8_t)(len >> 8);
+        tcp_mbap[5] = (uint8_t)(len);
+        
+        memmove(&data[6], &data[0], len);
+        memcpy(data, tcp_mbap, sizeof(tcp_mbap));
+        len += sizeof(tcp_mbap);
+    }
     // wait generally 3.5 characters time
     while (!skrmb_tickcheck_ms(send_port->port_send_s_tick_ms, SKRMB_DEFAULT_SEND_GAP_MS)) skrmb_delay_ms(10);
     send_port->port_send_func(data, len);
@@ -228,7 +277,7 @@ uint16_t skrmb_err_response(struct _skrmb_dev_node_t *dev_node, uint8_t funcode,
 
 skrmb_sta_flg_e skrmb_m_request_read(struct _skrmb_dev_node_t *dev_node)
 {
-    uint16_t s_data_index = 0, tmp_crc = 0;
+    uint16_t s_data_index = 0;
 
     dev_node->send_buf[s_data_index++] = dev_node->m_wait_para->smb_addr;
     dev_node->send_buf[s_data_index++] = dev_node->m_wait_para->funcode;
@@ -237,17 +286,13 @@ skrmb_sta_flg_e skrmb_m_request_read(struct _skrmb_dev_node_t *dev_node)
     dev_node->send_buf[s_data_index++] = (uint8_t)(dev_node->m_wait_para->reg_num >> 8);
     dev_node->send_buf[s_data_index++] = (uint8_t)(dev_node->m_wait_para->reg_num);
 
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
-
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
     return SKRMB_NO_ERROR;
 }
 
 skrmb_sta_flg_e skrmb_m_request_write(struct _skrmb_dev_node_t *dev_node, void *w_data, uint16_t w_len)
 {
-    uint16_t s_data_index = 0, tmp_crc = 0;
+    uint16_t s_data_index = 0;
 
     dev_node->send_buf[s_data_index++] = dev_node->m_wait_para->smb_addr;
     dev_node->send_buf[s_data_index++] = dev_node->m_wait_para->funcode;
@@ -262,10 +307,6 @@ skrmb_sta_flg_e skrmb_m_request_write(struct _skrmb_dev_node_t *dev_node, void *
     }
     memcpy(&dev_node->send_buf[s_data_index], w_data, w_len);
     s_data_index += w_len;
-
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
 
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
     return SKRMB_NO_ERROR;

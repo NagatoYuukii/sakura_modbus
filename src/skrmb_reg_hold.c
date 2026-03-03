@@ -54,7 +54,7 @@ skrmb_sta_flg_e skrmb_hold_read_handle(struct _skrmb_dev_node_t *dev_node)
 {
     skrmb_sta_flg_e sta_flg = SKRMB_NO_ERROR;
     uint8_t byte_count = 0;
-    uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0, data_len = 0;
+    uint16_t s_data_index = 0, data_addr = 0, data_len = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
     data_len    = SKRMB_U16_GET(dev_node->rec_buf[4], dev_node->rec_buf[5]);
@@ -65,10 +65,6 @@ skrmb_sta_flg_e skrmb_hold_read_handle(struct _skrmb_dev_node_t *dev_node)
     dev_node->send_buf[s_data_index++] = byte_count;
     s_data_index += byte_count;
 
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
-
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 
     return sta_flg;
@@ -77,7 +73,7 @@ skrmb_sta_flg_e skrmb_hold_read_handle(struct _skrmb_dev_node_t *dev_node)
 skrmb_sta_flg_e skrmb_hold_write_single_handle(struct _skrmb_dev_node_t *dev_node)
 {
     skrmb_sta_flg_e sta_flg = SKRMB_NO_ERROR;
-    uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0;
+    uint16_t s_data_index = 0, data_addr = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
 
@@ -94,10 +90,6 @@ skrmb_sta_flg_e skrmb_hold_write_single_handle(struct _skrmb_dev_node_t *dev_nod
     */
     skrmb_hold_data_handle(dev_node->reg_table, SKRMB_REG_TYPE_HOLDING, dev_node->reg_count, data_addr, (uint8_t *)&dev_node->rec_buf[4], 1, false);
 
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
-
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 
     return sta_flg;
@@ -107,7 +99,7 @@ skrmb_sta_flg_e skrmb_hold_write_multiple_handle(struct _skrmb_dev_node_t *dev_n
 {
     skrmb_sta_flg_e sta_flg = SKRMB_NO_ERROR;
     uint8_t byte_count = 0, reg_w_count = 0;
-    uint16_t s_data_index = 0, tmp_crc = 0, data_addr = 0, data_len = 0;
+    uint16_t s_data_index = 0, data_addr = 0, data_len = 0;
 
     data_addr   = SKRMB_U16_GET(dev_node->rec_buf[2], dev_node->rec_buf[3]);
     data_len    = SKRMB_U16_GET(dev_node->rec_buf[4], dev_node->rec_buf[5]);
@@ -122,10 +114,6 @@ skrmb_sta_flg_e skrmb_hold_write_multiple_handle(struct _skrmb_dev_node_t *dev_n
     dev_node->send_buf[s_data_index++] = (uint8_t)data_addr;
     dev_node->send_buf[s_data_index++] = (reg_w_count >> 8);
     dev_node->send_buf[s_data_index++] = (uint8_t)reg_w_count;
-
-    tmp_crc = skrmb_crc(dev_node->send_buf, s_data_index);
-    dev_node->send_buf[s_data_index++] = (uint8_t)tmp_crc;
-    dev_node->send_buf[s_data_index++] = (uint8_t)(tmp_crc >> 8);
 
     skrmb_send_data(dev_node, dev_node->send_buf, s_data_index);
 
