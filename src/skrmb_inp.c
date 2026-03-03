@@ -16,7 +16,7 @@ skrmb_sta_flg_e skrmb_data_push(uint32_t dev_id, uint8_t port_id, uint8_t *data,
     if (dev_node->rec_flg != SKRMB_NO_DATA) return SKRMB_INPUT_DATA_FULL;
 
     send_port = skrmb_find_port(dev_node, port_id);
-    SKRMB_PTR_NULL(send_port);
+    if (send_port == NULL) return SKRMB_PORT_NO_FIND;
 
     if (send_port->port_type == SKRMB_RTU_PORT)
     {

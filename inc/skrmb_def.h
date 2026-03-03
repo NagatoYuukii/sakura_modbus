@@ -50,6 +50,7 @@ enum
 {
     SKRMB_NO_ERROR = 0,                                     // no error
     SKRMB_DEV_NO_FIND,                                      // device id not found
+    SKRMB_PORT_NO_FIND,                                     // port id not found
     SKRMB_INPUT_DATA_ERR,                                   // input data length or crc exception
     SKRMB_INPUT_DATA_FULL,                                  // input data processing area full
     SKRMB_INPUT_MODBUS_ADDR_ERR,                            // input modbus address exception
