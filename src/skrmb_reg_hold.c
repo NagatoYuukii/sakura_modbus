@@ -35,6 +35,10 @@ uint8_t skrmb_hold_data_handle(struct _skrmb_dev_reg_t *reg_table, skrmb_reg_typ
             copy_count = len * 2;
             single_byte = false;
         }
+        
+        if (addr != reg_start) {
+            data_p += (addr - reg_start);
+        }
 
         if (is_read) {
             memcpy(&buf[byte_count], data_p, single_byte ? (copy_count - 1) : copy_count);
