@@ -16,6 +16,7 @@
 * 数据格式支持Modbus RTU
 * 支持端口注册，可以一个设备多个端口，协议栈自动跟踪，从哪里来就从哪里出
 * 支持注册多个从机地址
+* 当一个设备有多个数据端口时，同一时刻只会响应一条报文指令。否则会被` skrmb_data_push() `返回` SKRMB_INPUT_DATA_FULL `状态。
 
 协议栈支持的功能码:
 ```
@@ -59,6 +60,10 @@ extern void skrmb_m_write_hold_cb(uint8_t mb_addr, uint16_t reg_addr, uint16_t w
 /* (从机不需要) 等待从机回复超时回调*/
 extern void skrmb_m_wait_timeout_cb(uint8_t mb_addr);
 ```
+
+协议栈占用大小：  
+RAM：单个设备和端口占用大约600-1K byte，注册设备约多占用越多  
+FLASH：-O0 优化下占用约1.5K大小
 
 代码结构：
 ```
