@@ -32,6 +32,8 @@ skrmb_sta_flg_e skrmb_data_push(uint32_t dev_id, uint8_t port_id, uint8_t *data,
         dev_node->rec_trans_id = tmp_trans_id;
         data += 6;  // offset to unit id
         len -= 6;
+        // master role check trans id
+        if (dev_node->dev_role == SKRMB_ROLE_MASTER && dev_node->rec_trans_id != dev_node->m_wait_para->transaction_id) return SKRMB_INPUT_TCP_TRANS_ID_ERR;
     }
 
     memcpy(dev_node->rec_buf, data, len);

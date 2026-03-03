@@ -54,6 +54,7 @@ enum
     SKRMB_INPUT_DATA_FULL,                                  // input data processing area full
     SKRMB_INPUT_MODBUS_ADDR_ERR,                            // input modbus address exception
     SKRMB_INPUT_FUNC_CODE_ERR,                              // invalid function code
+    SKRMB_INPUT_TCP_TRANS_ID_ERR,                           // TCP mode trans id err
     SKRMB_REG_INDEX_OVERFLOW,                               // data index to read or write does not exist
     SKRMB_MASTER_WAIT_TIMEOUT,                              // master wait timeout
 };

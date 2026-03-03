@@ -22,8 +22,8 @@ uint16_t skrmb_return_master_transaction_id(struct _skrmb_dev_node_t *dev_node)
     SKRMB_PTR_NULL(dev_node);
     SKRMB_PTR_NULL(dev_node->m_wait_para);
 
-    tmp_id = dev_node->m_wait_para->transaction_id;
     dev_node->m_wait_para->transaction_id ++;
+    tmp_id = dev_node->m_wait_para->transaction_id;
 
     return tmp_id;
 }
