@@ -8,6 +8,7 @@
 
 static skrmb_sta_flg_e skrmb_rec_data_handle_s(struct _skrmb_dev_node_t *dev_node);
 static skrmb_sta_flg_e skrmb_rec_data_handle_m(struct _skrmb_dev_node_t *dev_node);
+static skrmb_sta_flg_e skrmb_m_check_wait_timeout(struct _skrmb_dev_node_t *dev_node);
 
 void skrmb_rec_data_handle(uint32_t dev_id)
 {
@@ -15,6 +16,9 @@ void skrmb_rec_data_handle(uint32_t dev_id)
     
     dev_node = skrmb_find_dev(dev_id);
     SKRMB_PTR_NULL(dev_node);
+
+    /* check master wait timeout */
+    if (dev_node->dev_role == SKRMB_ROLE_MASTER) skrmb_m_check_wait_timeout(dev_node);
 
     /* no data */
     if (dev_node->rec_flg == SKRMB_NO_DATA) return; 
@@ -104,15 +108,10 @@ static skrmb_sta_flg_e skrmb_m_check_wait_timeout(struct _skrmb_dev_node_t *dev_
     return sta_flg;
 }
 
-
 static skrmb_sta_flg_e skrmb_rec_data_handle_m(struct _skrmb_dev_node_t *dev_node)
 {
-
     uint8_t tmp_mb_addr = 0, tmp_funcode = 0;
     uint32_t data_index = 0;
-
-    /* check master wait timeout */
-    skrmb_m_check_wait_timeout(dev_node);
 
     /* check modbus addr */
     tmp_mb_addr = dev_node->rec_buf[data_index++];
